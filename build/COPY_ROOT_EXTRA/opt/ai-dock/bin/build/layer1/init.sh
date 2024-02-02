@@ -24,6 +24,9 @@ EXTENSIONS=(
     #"https://github.com/Coyote-A/ultimate-upscale-for-automatic1111"
     #"https://github.com/fkunn1326/openpose-editor"
     #"https://github.com/Gourieff/sd-webui-reactor"
+    "https://github.com/OpenTalker/SadTalker"
+    "https://github.com/Iyashinouta/sd-model-downloader"
+    #"https://github.com/continue-revolution/sd-webui-animatediff.git"
 )
 
 CHECKPOINT_MODELS=(
@@ -31,10 +34,27 @@ CHECKPOINT_MODELS=(
     #"https://huggingface.co/stabilityai/stable-diffusion-2-1/resolve/main/v2-1_768-ema-pruned.ckpt"
     #"https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors"
     #"https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors"
+    # "https://civitai.com/api/download/models/293564"
+    # "https://civitai.com/api/download/models/288982"
+    # "https://civitai.com/api/download/models/130072"
+    # "https://civitai.com/api/download/models/46846"
 )
 
 LORA_MODELS=(
     #"https://civitai.com/api/download/models/16576"
+    "https://civitai.com/api/download/models/62833"
+    "https://civitai.com/api/download/models/87153?type=Model&format=SafeTensor"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v2_lora_PanLeft.safetensors"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v2_lora_PanRight.safetensors"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v2_lora_RollingAnticlockwise.safetensors"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v2_lora_RollingClockwise.safetensors"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v2_lora_TiltDown.safetensors"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v2_lora_TiltUp.safetensors"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v2_lora_ZoomIn.safetensors"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v2_lora_ZoomOut.safetensors"
+    "https://huggingface.co/conrevo/AnimateDiff-A1111/resolve/main/lora_v2/mm_sd15_v3_adapter.safetensors"
+    "https://civitai.com/api/download/models/219642"
+
 )
 
 VAE_MODELS=(
@@ -69,6 +89,13 @@ CONTROLNET_MODELS=(
     #"https://huggingface.co/webui/ControlNet-modules-safetensors/resolve/main/t2iadapter_style-fp16.safetensors"
 )
 
+SADTALKER_MODELS=(
+    "https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/mapping_00109-model.pth.tar"
+    "https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/mapping_00229-model.pth.tar"
+    "https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/SadTalker_V0.0.2_256.safetensors"
+    "https://github.com/OpenTalker/SadTalker/releases/download/v0.0.2-rc/SadTalker_V0.0.2_512.safetensors"
+)
+
 ### DO NOT EDIT BELOW HERE UNLESS YOU KNOW WHAT YOU ARE DOING ###
 
 function build_extra_start() {
@@ -93,7 +120,10 @@ function build_extra_start() {
         "${ESRGAN_MODELS[@]}"
    
     cd /opt/stable-diffusion-webui && \
-        micromamba run -n webui -e LD_PRELOAD=libtcmalloc.so python launch.py \
+        micromamba run -n webui \
+        -e LD_PRELOAD=libtcmalloc.so python launch.py \
+        -e COMMANDLINE_ARGS=--disable-safe-unpickle \
+        -e SADTALKER_CHECKPOINTS=/models/SadTalker \
         --use-cpu all \
         --skip-torch-cuda-test \
         --skip-python-version-check \
@@ -134,11 +164,12 @@ function build_extra_get_extensions() {
             fi
         else
             printf "Downloading extension: %s...\n" "${repo}"
-            git clone "${repo}" "${path}" --recursive
+            git clone "${repo}" "${path}" --recursive            
             if [[ -e $requirements ]]; then
                 micromamba -n webui run ${PIP_INSTALL} -r "${requirements}"
             fi
         fi
+        chmod +rwx "${path}"
     done
 }
 
